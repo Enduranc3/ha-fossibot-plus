@@ -25,11 +25,22 @@ Monitor and control your FOSSiBOT power station directly from Home Assistant. Se
 Multiple stations in one account are supported — each gets its own device with its serial number in the name (e.g. `Fossibot-F180V012605B4936`).
 
 ---
+## ⚠️ Prerequisites
 
-## 🙏 Acknowledgements
+This integration works **only with devices already connected to Wi-Fi** and visible as **online** in the Fossibot+ app.
+
+It communicates through the FOSSiBOT cloud API — the same channel the mobile app uses when your station is on your home network. **Bluetooth is not used** and is not required.
+
+Before adding this integration to Home Assistant, make sure:
+1. Your power station is connected to Wi-Fi via the **Fossibot+** app.
+2. The device shows as **online** in the app.
+3. You have a working Fossibot+ account (email + password).
+
+If you can't pair the device in the Fossibot+ app, please contact FOSSiBOT support — that step is handled entirely by the app and is outside the scope of this integration.
 
 ---
 
+## 🙏 Acknowledgements
 
 **Special thanks to everyone who contributed to making this integration better:**
 
@@ -98,7 +109,6 @@ Multiple stations in one account are supported — each gets its own device with
 
 ---
 
----
 
 ## 🇺🇦 Українська
 
@@ -116,9 +126,22 @@ Multiple stations in one account are supported — each gets its own device with
 
 ---
 
-## 🙏 Подяки
+## ⚠️ Передумови
+
+Ця інтеграція працює **тільки з пристроями, підключеними до Wi-Fi**, які відображаються як **онлайн** у застосунку Fossibot+.
+
+Вона використовує хмарний API FOSSiBOT — той самий канал, через який мобільний застосунок спілкується зі станцією, коли та підключена до вашої домашньої мережі. **Bluetooth не використовується** і не потрібен.
+
+Перед додаванням інтеграції в Home Assistant переконайтеся що:
+1. Ваша зарядна станція підключена до Wi-Fi через застосунок **Fossibot+**.
+2. Пристрій відображається як **онлайн** у застосунку.
+3. У вас є обліковий запис Fossibot+ (email + пароль).
+
+Якщо не вдається підключити пристрій у застосунку Fossibot+ — зверніться до підтримки FOSSiBOT. Цей крок виконується виключно через застосунок і не пов'язаний з цією інтеграцією.
 
 ---
+
+## 🙏 Подяки
 
 **Щира подяка всім, хто допоміг зробити цю інтеграцію кращою:**
 
