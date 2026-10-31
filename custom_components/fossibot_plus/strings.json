@@ -2,17 +2,33 @@
   "config": {
     "step": {
       "user": {
+        "title": "Connection mode",
+        "data": {
+          "mode": "Connection mode"
+        }
+      },
+      "cloud": {
         "title": "Sign in to Fossibot+",
         "data": {
           "email": "Email",
           "password": "Password"
+        }
+      },
+      "local": {
+        "title": "Local Wi-Fi AP",
+        "data": {
+          "serial": "Station serial number",
+          "host": "Listen host",
+          "port": "Listen port",
+          "allowed_prefix": "Allowed client IP prefix"
         }
       }
     },
     "error": {
       "invalid_auth": "Invalid email or password",
       "cannot_connect": "Could not reach the FOSSiBOT cloud",
-      "unknown": "Unexpected error — check the Home Assistant log"
+      "unknown": "Unexpected error — check the Home Assistant log",
+      "invalid_serial": "Enter a station serial number"
     },
     "abort": {
       "already_configured": "This account is already configured"

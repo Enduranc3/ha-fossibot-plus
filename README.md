@@ -27,7 +27,10 @@ Multiple stations in one account are supported — each gets its own device with
 ---
 ## ⚠️ Prerequisites
 
-This integration works **only with devices already connected to Wi-Fi** and visible as **online** in the Fossibot+ app.
+This integration supports two connection modes:
+
+- **Cloud**: the station is connected to Wi-Fi and visible as online in the Fossibot+ app.
+- **Local Wi-Fi AP**: Home Assistant connects to the station's `FOSS_<serial>` Wi-Fi network and listens for the station's TCP connection.
 
 It communicates through the FOSSiBOT cloud API — the same channel the mobile app uses when your station is on your home network. **Bluetooth is not used** and is not required.
 
@@ -37,6 +40,23 @@ Before adding this integration to Home Assistant, make sure:
 3. You have a working Fossibot+ account (email + password).
 
 If you can't pair the device in the Fossibot+ app, please contact FOSSiBOT support — that step is handled entirely by the app and is outside the scope of this integration.
+
+### Local Wi-Fi AP mode
+
+Select **Local Wi-Fi AP** when adding the integration. Connect the Home Assistant
+host to the station Wi-Fi network (`FOSS_<serial>`), then configure the station
+serial number and TCP port `8058`. The station initiates the TCP connection to
+Home Assistant; Home Assistant does not connect to the station.
+
+This mode uses the reverse-engineered binary protocol documented in
+[`Enduranc3/fossibot-control`](https://github.com/Enduranc3/fossibot-control/blob/main/PROTOCOL.md).
+The station's AP password and IP range are firmware-dependent. The integration
+does not require Fossibot cloud credentials in local mode. If the Home Assistant
+host has multiple network interfaces, bind the listener to the appropriate
+address and optionally restrict the client IP prefix.
+
+Local mode is firmware-dependent and should be tested with the station before
+relying on it for automation or safety-critical control.
 
 ---
 
@@ -138,6 +158,16 @@ If you can't pair the device in the Fossibot+ app, please contact FOSSiBOT suppo
 3. У вас є обліковий запис Fossibot+ (email + пароль).
 
 Якщо не вдається підключити пристрій у застосунку Fossibot+ — зверніться до підтримки FOSSiBOT. Цей крок виконується виключно через застосунок і не пов'язаний з цією інтеграцією.
+
+### Локальний режим точки доступу Wi-Fi
+
+Під час додавання інтеграції виберіть **Локальна Wi-Fi точка доступу**.
+Підключіть Home Assistant до мережі станції `FOSS_<серійний_номер>` і
+налаштуйте TCP-порт `8058`. Станція сама ініціює TCP-з'єднання з Home
+Assistant. Хмарні облікові дані в цьому режимі не потрібні.
+
+Режим використовує реверс-інжиніринговий бінарний протокол, тому сумісність
+залежить від прошивки. Пароль точки доступу та діапазон IP можуть відрізнятися.
 
 ---
 

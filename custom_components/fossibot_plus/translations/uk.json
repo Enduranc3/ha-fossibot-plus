@@ -2,17 +2,33 @@
   "config": {
     "step": {
       "user": {
+        "title": "Режим підключення",
+        "data": {
+          "mode": "Режим підключення"
+        }
+      },
+      "cloud": {
         "title": "Вхід у Fossibot+",
         "data": {
           "email": "Електронна пошта",
           "password": "Пароль"
+        }
+      },
+      "local": {
+        "title": "Локальна Wi-Fi точка доступу",
+        "data": {
+          "serial": "Серійний номер станції",
+          "host": "Адреса прослуховування",
+          "port": "Порт прослуховування",
+          "allowed_prefix": "Дозволений префікс IP клієнта"
         }
       }
     },
     "error": {
       "invalid_auth": "Невірна пошта або пароль",
       "cannot_connect": "Не вдалося з'єднатися з хмарою FOSSiBOT",
-      "unknown": "Неочікувана помилка — перевірте журнал Home Assistant"
+      "unknown": "Неочікувана помилка — перевірте журнал Home Assistant",
+      "invalid_serial": "Введіть серійний номер станції"
     },
     "abort": {
       "already_configured": "Цей акаунт уже налаштовано"

@@ -19,6 +19,18 @@ LOGIN_MAX_RETRIES = 2
 
 CONF_EMAIL = "email"
 CONF_PASSWORD = "password"
+CONF_MODE = "mode"
+CONF_SERIAL = "serial"
+CONF_HOST = "host"
+CONF_PORT = "port"
+CONF_ALLOWED_PREFIX = "allowed_prefix"
+
+MODE_CLOUD = "cloud"
+MODE_LOCAL = "local"
+
+LOCAL_TCP_PORT = 8058
+LOCAL_FRAME_TIMEOUT = 30
+LOCAL_ACK_FRAME = bytes.fromhex("0a001f00040004001f00")
 
 CTRL_COMMAND_PREFIX = "0e000c000800"
 
