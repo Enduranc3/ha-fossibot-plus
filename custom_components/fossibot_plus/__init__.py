@@ -23,8 +23,10 @@ from .const import (
     CONF_PASSWORD,
     CONF_PORT,
     CONF_SERIAL,
+    CONF_STATION_IP,
     DEVICE_STATUS_POLL_INTERVAL,
     DOMAIN,
+    MODE_LAN,
     MODE_LOCAL,
 )
 from .coordinator import FossibotCoordinator
@@ -40,7 +42,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     # leak connections every time the entry reloads.
     session = async_get_clientsession(hass)
     local = None
-    if entry.data.get(CONF_MODE) == MODE_LOCAL:
+    if entry.data.get(CONF_MODE) in (MODE_LOCAL, MODE_LAN):
         local = FossibotLocalTcpServer(
             entry.data.get(CONF_HOST, "0.0.0.0"),
             int(entry.data.get(CONF_PORT, 8058)),
@@ -48,6 +50,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             lambda _data: None,
             lambda _online: None,
             entry.data.get(CONF_ALLOWED_PREFIX) or None,
+            allowed_ip=entry.data.get(CONF_STATION_IP) or None,
         )
         api = FossibotApiClient(session, local=local)
         devices = await api.async_get_devices()

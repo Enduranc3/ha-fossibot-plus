@@ -27,6 +27,7 @@ from .const import (
     LOGIN_RETRY_DELAY,
     LOCAL_ACK_FRAME,
     LOCAL_FRAME_TIMEOUT,
+    LOCAL_HELLO_REPLY,
     RECONNECT_DELAY,
     WS_URL,
 )
@@ -46,6 +47,8 @@ HEADER_LEN = 6  # bytes
 TAIL_LEN = 2    # bytes - CRC16, parsed but NOT validated: the source spec
                 # never documented the checksum algorithm.
 BLOCK_LEN = 6   # bytes per [tag(2)][value(4, little-endian)] block
+HELLO_FRAME_TYPE = 0x0051
+HELLO_FIRMWARE_LEN = 4  # bytes after the ASCII serial in a hello frame
 
 
 class FossibotAuthError(Exception):
@@ -90,6 +93,19 @@ def parse_local_frame(raw: bytes) -> tuple[int, dict[str, int]] | None:
     return frame_type, parse_payload(raw.hex())
 
 
+def parse_local_hello(raw: bytes) -> str | None:
+    """Return the serial from a station hello frame, which carries no CRC."""
+    if len(raw) <= HEADER_LEN + HELLO_FIRMWARE_LEN:
+        return None
+    length, frame_type, payload_length = struct.unpack_from("<HHH", raw)
+    if frame_type != HELLO_FRAME_TYPE or length != len(raw) or payload_length != length - HEADER_LEN:
+        return None
+    try:
+        return raw[HEADER_LEN:-HELLO_FIRMWARE_LEN].decode("ascii")
+    except UnicodeDecodeError:
+        return None
+
+
 def build_local_command(tag_hex: str, value: int) -> bytes:
     """Build the binary command frame used by the station's local TCP mode."""
     record = bytes.fromhex(tag_hex) + value.to_bytes(4, "little")
@@ -117,7 +133,7 @@ class _FrameAssembler:
 
 
 class FossibotLocalTcpServer:
-    """TCP server for the station's local AP mode."""
+    """TCP server the station connects to, on its own AP or in place of the cloud."""
 
     def __init__(
         self,
@@ -127,6 +143,7 @@ class FossibotLocalTcpServer:
         on_data: Callable[[dict[str, int]], None],
         on_state: Callable[[bool], None],
         allowed_prefix: str | None = None,
+        allowed_ip: str | None = None,
     ) -> None:
         self.host = host
         self.port = port
@@ -134,6 +151,8 @@ class FossibotLocalTcpServer:
         self._on_data = on_data
         self._on_state = on_state
         self._allowed_prefix = allowed_prefix
+        self._allowed_ip = allowed_ip
+        self._warned: set[str] = set()
         self._server: asyncio.AbstractServer | None = None
         self._writer: asyncio.StreamWriter | None = None
         self._reader_task: asyncio.Task | None = None
@@ -160,8 +179,7 @@ class FossibotLocalTcpServer:
         if self._watchdog_task:
             self._watchdog_task.cancel()
         if self._writer:
-            self._writer.close()
-            await self._writer.wait_closed()
+            await self._close_writer(self._writer)
         if self._server:
             self._server.close()
             await self._server.wait_closed()
@@ -180,13 +198,15 @@ class FossibotLocalTcpServer:
     ) -> None:
         peer = writer.get_extra_info("peername")
         address = peer[0] if peer else ""
+        if self._allowed_ip and address != self._allowed_ip:
+            self._warn_once(f"Rejected connection from {address}: expected the station at {self._allowed_ip}")
+            await self._close_writer(writer)
+            return
         if self._allowed_prefix and not address.startswith(self._allowed_prefix):
-            writer.close()
-            await writer.wait_closed()
+            await self._close_writer(writer)
             return
         if self._writer:
-            self._writer.close()
-            await self._writer.wait_closed()
+            await self._close_writer(self._writer)
         self._writer = writer
         self._assembler = _FrameAssembler()
         self._on_state(False)
@@ -201,6 +221,14 @@ class FossibotLocalTcpServer:
                 if not chunk:
                     break
                 for raw in self._assembler.feed(chunk):
+                    hello = parse_local_hello(raw)
+                    if hello is not None:
+                        if hello.casefold() != self.sn_code.casefold():
+                            self._warn_once("Closed station connection: its serial does not match the configured one")
+                            return
+                        writer.write(LOCAL_HELLO_REPLY)
+                        await writer.drain()
+                        continue
                     parsed = parse_local_frame(raw)
                     if parsed is None:
                         continue
@@ -218,8 +246,20 @@ class FossibotLocalTcpServer:
             if self._writer is writer:
                 self._writer = None
                 self._on_state(False)
-            writer.close()
+            await self._close_writer(writer)
+
+    @staticmethod
+    async def _close_writer(writer: asyncio.StreamWriter) -> None:
+        writer.close()
+        try:
             await writer.wait_closed()
+        except OSError:
+            pass  # The station reset the connection; it is closed either way.
+
+    def _warn_once(self, message: str) -> None:
+        if message not in self._warned:
+            self._warned.add(message)
+            _LOGGER.warning(message)
 
     async def _watchdog(self) -> None:
         await asyncio.sleep(LOCAL_FRAME_TIMEOUT)
